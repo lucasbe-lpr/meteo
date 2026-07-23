@@ -1,12 +1,6 @@
 import { store } from './store.js';
 import { parseDate, formatNum } from './utils.js';
 
-// Copie locale de dayOfYear pour éviter l'import
-function dayOfYear(date) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  return Math.floor((date - start) / (1000 * 60 * 60 * 24));
-}
-
 export async function loadData(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -22,12 +16,15 @@ export async function loadData(url) {
   const records = raw.map(row => {
     const date = parseDate(row.AAAAMMJJ);
     if (!date || isNaN(date.getTime())) return null;
+    // Calcul inline du jour de l'année
+    const startOfYear = new Date(date.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
     const r = {
       date,
       year: date.getFullYear(),
       month: date.getMonth() + 1,
       day: date.getDate(),
-      dayOfYear: dayOfYear(date),   // <-- ici on utilise la fonction locale
+      dayOfYear: dayOfYear,
       RR: parseFloat(row.RR),
       TN: parseFloat(row.TN),
       TX: parseFloat(row.TX),
