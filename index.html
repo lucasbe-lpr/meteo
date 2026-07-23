@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meteo‑Journalist · Lyon‑Bron</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">📊 Meteo‑Journalist</div>
+    <div class="station-info" id="stationInfo">Chargement…</div>
+  </header>
+
+  <nav>
+    <button class="tab active" data-tab="explorer">Explorer</button>
+    <button class="tab" data-tab="records">Records</button>
+    <button class="tab" data-tab="compare">Comparer</button>
+    <button class="tab" data-tab="charts">Graphiques</button>
+  </nav>
+
+  <main>
+    <!-- ===== EXPLORER ===== -->
+    <section id="explorer" class="panel active">
+      <div class="controls">
+        <select id="varFilter"><option value="">Variable</option></select>
+        <input type="number" id="threshold" placeholder="Seuil" step="any">
+        <select id="qualityFilter">
+          <option value="all">Toutes qualités</option>
+          <option value="0">Protégée (0)</option>
+          <option value="1">Validée (1)</option>
+          <option value="2">Douteuse (2)</option>
+          <option value="9">Filtrée (9)</option>
+        </select>
+        <button class="quick-btn" data-var="RR" data-threshold="0.1">☔ Pluie</button>
+        <button class="quick-btn" data-var="DG" data-threshold="1">❄️ Gel</button>
+        <button class="quick-btn" data-var="TX" data-threshold="30">🔥 Chaud</button>
+        <button class="quick-btn" data-var="FXI3S" data-threshold="10">💨 Rafale</button>
+        <button id="resetFilters">↺ Réinitialiser</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="dataTable">
+          <thead><tr></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="tableFooter"></div>
+      <div class="method-box">
+        <strong>Méthode :</strong> Les valeurs manquantes sont ignorées. Les records sont calculés sur l’ensemble des données disponibles.
+        <span class="quality-legend">
+          <span class="badge q0">0 protégée</span>
+          <span class="badge q1">1 validée</span>
+          <span class="badge q2">2 douteuse</span>
+          <span class="badge q9">9 filtrée</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- ===== RECORDS ===== -->
+    <section id="records" class="panel">
+      <div class="controls">
+        <select id="recordVar">
+          <option value="TX">TX max</option>
+          <option value="TN">TN min</option>
+          <option value="RR">RR max</option>
+          <option value="FXI3S">FXI3S max</option>
+          <option value="DG">DG max</option>
+          <option value="TAMPLI">TAMPLI max</option>
+        </select>
+        <select id="recordScope">
+          <option value="absolu">Absolu</option>
+          <option value="month">Par mois</option>
+          <option value="season">Par saison</option>
+          <option value="decade">Par décennie</option>
+          <option value="dayOfYear">Même jour de l’année</option>
+        </select>
+        <select id="recordSubset"><option value="">Toutes périodes</option></select>
+        <select id="recordQuality">
+          <option value="all">Toutes qualités</option>
+          <option value="0">Protégée (0)</option>
+          <option value="1">Validée (1)</option>
+          <option value="9">Filtrée (9)</option>
+        </select>
+        <span style="font-size:0.85rem;color:#555;">Top 50</span>
+      </div>
+      <div class="table-wrapper">
+        <table id="recordsTable">
+          <thead><tr></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="recordsFooter"></div>
+      <div class="method-box" id="recordsMethod"></div>
+    </section>
+
+    <!-- ===== COMPARER ===== -->
+    <section id="compare" class="panel">
+      <div class="compare-layout">
+        <div class="compare-panel">
+          <h3>Période A</h3>
+          <select id="compareTypeA">
+            <option value="date">Date précise</option>
+            <option value="month">Mois</option>
+            <option value="year">Année</option>
+            <option value="range">Plage personnalisée</option>
+          </select>
+          <div id="compareControlsA" class="compare-controls"></div>
+        </div>
+        <div class="compare-panel">
+          <h3>Période B</h3>
+          <select id="compareTypeB">
+            <option value="date">Date précise</option>
+            <option value="month">Mois</option>
+            <option value="year">Année</option>
+            <option value="range">Plage personnalisée</option>
+          </select>
+          <div id="compareControlsB" class="compare-controls"></div>
+        </div>
+      </div>
+      <button id="runCompare" class="primary-btn">Comparer</button>
+      <div id="compareResults"></div>
+      <div class="method-box" id="compareMethod"></div>
+    </section>
+
+    <!-- ===== GRAPHIQUES ===== -->
+    <section id="charts" class="panel">
+      <div class="controls">
+        <select id="chartVar">
+          <option value="TX">TX</option>
+          <option value="TN">TN</option>
+          <option value="RR">RR</option>
+          <option value="TM">TM</option>
+          <option value="TAMPLI">TAMPLI</option>
+          <option value="DG">DG</option>
+          <option value="FXI3S">FXI3S</option>
+        </select>
+        <select id="chartType">
+          <option value="line">Courbe temporelle</option>
+          <option value="bar">Barres (top 10)</option>
+          <option value="boxplot">Boxplot mensuel</option>
+        </select>
+        <select id="chartPeriod">
+          <option value="year">Année en cours</option>
+          <option value="all">Toutes</option>
+          <option value="range">Plage personnalisée</option>
+        </select>
+        <div id="chartRangeControls" style="display:none;">
+          <input type="date" id="chartStart">
+          <input type="date" id="chartEnd">
+        </div>
+        <button id="drawChart" class="primary-btn">Dessiner</button>
+      </div>
+      <div class="chart-container">
+        <canvas id="chartCanvas"></canvas>
+      </div>
+      <div class="chart-method" id="chartMethod"></div>
+    </section>
+  </main>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "./js/": "./js/"
+      }
+    }
+  </script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
