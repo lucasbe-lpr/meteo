@@ -1,6 +1,12 @@
 import { store } from './store.js';
 import { parseDate, formatNum } from './utils.js';
 
+// Copie locale de dayOfYear pour éviter l'import
+function dayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  return Math.floor((date - start) / (1000 * 60 * 60 * 24));
+}
+
 export async function loadData(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -21,8 +27,7 @@ export async function loadData(url) {
       year: date.getFullYear(),
       month: date.getMonth() + 1,
       day: date.getDate(),
-      dayOfYear: dayOfYear(date),
-      // variables
+      dayOfYear: dayOfYear(date),   // <-- ici on utilise la fonction locale
       RR: parseFloat(row.RR),
       TN: parseFloat(row.TN),
       TX: parseFloat(row.TX),
@@ -30,7 +35,6 @@ export async function loadData(url) {
       TAMPLI: parseFloat(row.TAMPLI),
       DG: parseFloat(row.DG),
       FXI3S: parseFloat(row.FXI3S),
-      // qualités
       QRR: row.QRR || '',
       QTN: row.QTN || '',
       QTX: row.QTX || '',
@@ -38,7 +42,6 @@ export async function loadData(url) {
       QTAMPLI: row.QTAMPLI || '',
       QDG: row.QDG || '',
       QFXI3S: row.QFXI3S || '',
-      // métadonnées
       NUM_POSTE: row.NUM_POSTE || '',
       NOM_USUEL: row.NOM_USUEL || '',
       LAT: parseFloat(row.LAT),
